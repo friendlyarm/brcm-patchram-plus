@@ -111,7 +111,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <stdarg.h>
 #include <stdlib.h>
 
 #ifdef ANDROID
@@ -192,25 +192,49 @@ uchar hci_write_pcm_data_format[] =
 uchar hci_write_i2spcm_interface_param[] =
 	{ 0x01, 0x6d, 0xFC, 0x04, 0x00, 0x00, 0x00, 0x00 };
 
+//{{ add by FriendlyARM
+static int _debug = 1;
+#define LOG_FILE_NAME "/tmp/brcm_patchram_plus.log"
+static void _log2file(const char* fmt, va_list vl)
+{
+        FILE* file_out;
+        file_out = fopen(LOG_FILE_NAME,"a+");
+        if (file_out == NULL) {
+                return;
+        }
+        vfprintf(file_out, fmt, vl);
+        fclose(file_out);
+}
+void log2file(const char *fmt, ...)
+{
+        if (_debug) {
+                va_list vl;
+                va_start(vl, fmt);
+                _log2file(fmt, vl);
+                va_end(vl);
+        }
+}
+//}}
+
 int
 parse_patchram(char *optarg)
 {
 	char *p;
 
 	if (!(p = strrchr(optarg, '.'))) {
-		fprintf(stderr, "file %s not an HCD file\n", optarg);
+		log2file("file %s not an HCD file\n", optarg);
 		exit(3);
 	}
 
 	p++;
 
 	if (strcasecmp("hcd", p) != 0) {
-		fprintf(stderr, "file %s not an HCD file\n", optarg);
+		log2file("file %s not an HCD file\n", optarg);
 		exit(4);
 	}
 
 	if ((hcdfile_fd = open(optarg, O_RDONLY)) == -1) {
-		fprintf(stderr, "file %s could not be opened, error %d\n", optarg, errno);
+		log2file("file %s could not be opened, error %d\n", optarg, errno);
 		exit(5);
 	}
 
@@ -221,7 +245,7 @@ void
 BRCM_encode_baud_rate(uint baud_rate, uchar *encoded_baud)
 {
 	if(baud_rate == 0 || encoded_baud == NULL) {
-		fprintf(stderr, "Baudrate not supported!");
+		log2file("Baudrate not supported!");
 		return;
 	}
 
@@ -395,46 +419,46 @@ parse_tosleep(char *optarg)
 void
 usage(char *argv0)
 {
-	printf("Usage %s:\n", argv0);
-	printf("\t<-d> to print a debug log\n");
-	printf("\t<--patchram patchram_file>\n");
-	printf("\t<--baudrate baud_rate>\n");
-	printf("\t<--bd_addr bd_address>\n");
-	printf("\t<--enable_lpm>\n");
-	printf("\t<--enable_hci>\n");
-	printf("\t<--use_baudrate_for_download> - Uses the\n");
-	printf("\t\tbaudrate for downloading the firmware\n");
-	printf("\t<--scopcm=sco_routing,pcm_interface_rate,frame_type,\n");
-	printf("\t\tsync_mode,clock_mode,lsb_first,fill_bits,\n");
-	printf("\t\tfill_method,fill_num,right_justify>\n");
-	printf("\n\t\tWhere\n");
-	printf("\n\t\tsco_routing is 0 for PCM, 1 for Transport,\n");
-	printf("\t\t2 for Codec and 3 for I2S,\n");
-	printf("\n\t\tpcm_interface_rate is 0 for 128KBps, 1 for\n");
-	printf("\t\t256 KBps, 2 for 512KBps, 3 for 1024KBps,\n");
-	printf("\t\tand 4 for 2048Kbps,\n");
-	printf("\n\t\tframe_type is 0 for short and 1 for long,\n");
-	printf("\t\tsync_mode is 0 for slave and 1 for master,\n");
-	printf("\n\t\tclock_mode is 0 for slabe and 1 for master,\n");
-	printf("\n\t\tlsb_first is 0 for false aand 1 for true,\n");
-	printf("\n\t\tfill_bits is the value in decimal for unused bits,\n");
-	printf("\n\t\tfill_method is 0 for 0's and 1 for 1's, 2 for\n");
-	printf("\t\tsigned and 3 for programmable,\n");
-	printf("\n\t\tfill_num is the number or bits to fill,\n");
-	printf("\n\t\tright_justify is 0 for false and 1 for true\n");
-	printf("\n\t<--i2s=i2s_enable,is_master,sample_rate,clock_rate>\n");
-	printf("\n\t\tWhere\n");
-	printf("\n\t\ti2s_enable is 0 for disable and 1 for enable,\n");
-	printf("\n\t\tis_master is 0 for slave and 1 for master,\n");
-	printf("\n\t\tsample_rate is 0 for 8KHz, 1 for 16Khz and\n");
-	printf("\t\t2 for 4 KHz,\n");
-	printf("\n\t\tclock_rate is 0 for 128KHz, 1 for 256KHz, 3 for\n");
-	printf("\t\t1024 KHz and 4 for 2048 KHz.\n\n");
-	printf("\t<--no2bytes skips waiting for two byte confirmation\n");
-	printf("\t\tbefore starting patchram download. Newer chips\n");
-	printf("\t\tdo not generate these two bytes.>\n");
-	printf("\t<--tosleep=microseconds>\n");
-	printf("\tuart_device_name\n");
+	log2file("Usage %s:\n", argv0);
+	log2file("\t<-d> to print a debug log\n");
+	log2file("\t<--patchram patchram_file>\n");
+	log2file("\t<--baudrate baud_rate>\n");
+	log2file("\t<--bd_addr bd_address>\n");
+	log2file("\t<--enable_lpm>\n");
+	log2file("\t<--enable_hci>\n");
+	log2file("\t<--use_baudrate_for_download> - Uses the\n");
+	log2file("\t\tbaudrate for downloading the firmware\n");
+	log2file("\t<--scopcm=sco_routing,pcm_interface_rate,frame_type,\n");
+	log2file("\t\tsync_mode,clock_mode,lsb_first,fill_bits,\n");
+	log2file("\t\tfill_method,fill_num,right_justify>\n");
+	log2file("\n\t\tWhere\n");
+	log2file("\n\t\tsco_routing is 0 for PCM, 1 for Transport,\n");
+	log2file("\t\t2 for Codec and 3 for I2S,\n");
+	log2file("\n\t\tpcm_interface_rate is 0 for 128KBps, 1 for\n");
+	log2file("\t\t256 KBps, 2 for 512KBps, 3 for 1024KBps,\n");
+	log2file("\t\tand 4 for 2048Kbps,\n");
+	log2file("\n\t\tframe_type is 0 for short and 1 for long,\n");
+	log2file("\t\tsync_mode is 0 for slave and 1 for master,\n");
+	log2file("\n\t\tclock_mode is 0 for slabe and 1 for master,\n");
+	log2file("\n\t\tlsb_first is 0 for false aand 1 for true,\n");
+	log2file("\n\t\tfill_bits is the value in decimal for unused bits,\n");
+	log2file("\n\t\tfill_method is 0 for 0's and 1 for 1's, 2 for\n");
+	log2file("\t\tsigned and 3 for programmable,\n");
+	log2file("\n\t\tfill_num is the number or bits to fill,\n");
+	log2file("\n\t\tright_justify is 0 for false and 1 for true\n");
+	log2file("\n\t<--i2s=i2s_enable,is_master,sample_rate,clock_rate>\n");
+	log2file("\n\t\tWhere\n");
+	log2file("\n\t\ti2s_enable is 0 for disable and 1 for enable,\n");
+	log2file("\n\t\tis_master is 0 for slave and 1 for master,\n");
+	log2file("\n\t\tsample_rate is 0 for 8KHz, 1 for 16Khz and\n");
+	log2file("\t\t2 for 4 KHz,\n");
+	log2file("\n\t\tclock_rate is 0 for 128KHz, 1 for 256KHz, 3 for\n");
+	log2file("\t\t1024 KHz and 4 for 2048 KHz.\n\n");
+	log2file("\t<--no2bytes skips waiting for two byte confirmation\n");
+	log2file("\t\tbefore starting patchram download. Newer chips\n");
+	log2file("\t\tdo not generate these two bytes.>\n");
+	log2file("\t<--tosleep=microseconds>\n");
+	log2file("\tuart_device_name\n");
 }
 
 int
@@ -478,11 +502,11 @@ parse_cmd_line(int argc, char **argv)
 		switch (c) {
 			case 0:
 				if (debug) {
-					printf ("option %s",
+					log2file ("option %s",
 						long_options[option_index].name);
 					if (optarg)
-						printf (" with arg %s", optarg);
-					printf ("\n");
+						log2file (" with arg %s", optarg);
+					log2file ("\n");
 				}
 
 				ret = (*parse[option_index])(optarg);
@@ -511,9 +535,9 @@ parse_cmd_line(int argc, char **argv)
 
 	if (optind < argc) {
 		if (debug)
-			printf ("%s \n", argv[optind]);
+			log2file ("%s \n", argv[optind]);
 		if ((uart_fd = open(argv[optind], O_RDWR | O_NOCTTY)) == -1) {
-			fprintf(stderr, "port %s could not be opened, error %d\n",
+			log2file("port %s could not be opened, error %d\n",
 					argv[2], errno);
 		}
 	}
@@ -556,13 +580,13 @@ dump(uchar *out, int len)
 
 	for (i = 0; i < len; i++) {
 		if (i && !(i % 16)) {
-			fprintf(stderr, "\n");
+			log2file("\n");
 		}
 
-		fprintf(stderr, "%02x ", out[i]);
+		log2file("%02x ", out[i]);
 	}
 
-	fprintf(stderr, "\n");
+	log2file("\n");
 }
 
 void
@@ -588,7 +612,7 @@ read_event(int fd, uchar *buffer)
 	if (debug) {
 		count += i;
 
-		fprintf(stderr, "received %d\n", count);
+		log2file("received %d\n", count);
 		dump(buffer, count);
 	}
 }
@@ -597,7 +621,7 @@ void
 hci_send_cmd(uchar *buf, int len)
 {
 	if (debug) {
-		fprintf(stderr, "writing\n");
+		log2file("writing\n");
 		dump(buf, len);
 	}
 
@@ -675,7 +699,7 @@ proc_baudrate()
 	tcsetattr(uart_fd, TCSANOW, &termios);
 
 	if (debug) {
-		fprintf(stderr, "Done setting baudrate\n");
+		log2file("Done setting baudrate\n");
 	}
 }
 
@@ -724,15 +748,15 @@ proc_enable_hci()
 	int i = N_HCI;
 	int proto = HCI_UART_H4;
 	if (ioctl(uart_fd, TIOCSETD, &i) < 0) {
-		fprintf(stderr, "Can't set line discipline\n");
+		log2file("Can't set line discipline\n");
 		return;
 	}
 
 	if (ioctl(uart_fd, HCIUARTSETPROTO, proto) < 0) {
-		fprintf(stderr, "Can't set hci protocol\n");
+		log2file("Can't set hci protocol\n");
 		return;
 	}
-	fprintf(stderr, "Done setting line discpline\n");
+	log2file("Done setting line discpline\n");
 	return;
 }
 
@@ -755,25 +779,25 @@ read_default_bdaddr()
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		fprintf(stderr, "open(%s) failed: %s (%d)", path, strerror(errno),
+		log2file("open(%s) failed: %s (%d)", path, strerror(errno),
 				errno);
 		return;
 	}
 
 	sz = read(fd, bdaddr, len);
 	if (sz < 0) {
-		fprintf(stderr, "read(%s) failed: %s (%d)", path, strerror(errno),
+		log2file("read(%s) failed: %s (%d)", path, strerror(errno),
 				errno);
 		close(fd);
 		return;
 	} else if (sz != len) {
-		fprintf(stderr, "read(%s) unexpected size %d", path, sz);
+		log2file("read(%s) unexpected size %d", path, sz);
 		close(fd);
 		return;
 	}
 
 	if (debug) {
-		printf("Read default bdaddr of %s\n", bdaddr);
+		log2file("Read default bdaddr of %s\n", bdaddr);
 	}
 
 	parse_bdaddr(bdaddr);
@@ -786,6 +810,11 @@ main (int argc, char **argv)
 {
 #ifdef ANDROID
 	read_default_bdaddr();
+#else
+    if (isAlreadyRunning() == 1) {
+        exit(3);
+    }
+    daemonize( "brcm_patchram_plus" );
 #endif
 
 	if (parse_cmd_line(argc, argv)) {
@@ -832,11 +861,10 @@ main (int argc, char **argv)
 
 	if (enable_hci) {
 		proc_enable_hci();
-
-		while (1) {
-			sleep(UINT_MAX);
-		}
 	}
 
+	while (1) {
+		sleep(UINT_MAX);
+	}
 	exit(0);
 }
