@@ -13,7 +13,7 @@ TARGET = brcm_patchram_plus
 
 all : brcm_patchram_plus
 $(TARGET) : $(OBJECTS)
-		$(GXX) -o $(TARGET) $(OBJECTS)
+		$(GXX) -static -o $(TARGET) $(OBJECTS)
 
 .c.o :
 		$(GXX) $(INC) $(CFLAGS) $<
