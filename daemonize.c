@@ -138,8 +138,7 @@ void daemonize(const char *cmd)
      */
     openlog(cmd, LOG_CONS, LOG_DAEMON);
     if (fd0 != 0 || fd1 != 1 || fd2 != 2) {
-        log2file(LOG_ERR, "unexpected file descriptors %d %d %d\n",
-                fd0, fd1, fd2);
+        log2file("unexpected file descriptors\n");
         exit(1);
     }
 }
@@ -191,7 +190,7 @@ int isAlreadyRunning()
 
    fd = open(LOCKFILE, O_RDWR|O_CREAT, LOCKMODE);
    if (fd < 0) {
-       log2file(LOG_ERR, "can't open %s: %s\n", LOCKFILE, strerror(errno));
+       log2file("can't open %s: %s\n", LOCKFILE, strerror(errno));
        exit(1);
    }
 
@@ -200,7 +199,7 @@ int isAlreadyRunning()
            close(fd);
            return(1);
        }
-       log2file(LOG_ERR, "can't lock %s: %s\n", LOCKFILE, strerror(errno));
+       log2file("can't lock %s: %s\n", LOCKFILE, strerror(errno));
        exit(1);
    }
    ftruncate(fd, 0);
